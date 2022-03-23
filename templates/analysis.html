@@ -1,0 +1,98 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>アナリシスを提出する</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:title" content="">
+    <meta property="og:type" content="">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" href="icon.png">
+    <!-- Place favicon.ico in the root directory -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    
+    <meta name="theme-color" content="#fafafa">
+  </head>
+  <body>
+
+    <div class="container">
+      
+        <div class="panel-body">
+          <p>こんにちは</p>
+          <ul>
+            <li>
+              <a href="/analysis">アナリシスを提出する</a>
+          </ul>
+
+          <ul>
+            <li>
+              <a href="/myanalysis">自分のアナリシス</a>
+          </ul>
+          <ul>
+            <li>
+              <a href="/everyanalysis">皆のアナリシス</a>
+          </ul>
+          
+        </div>
+    </div>
+    <h3>event list</h3>
+    <ul>
+      <table border="1">
+        <tr>
+          <th>
+            日付
+          </th>
+          <th>
+            テレイン
+          </th>
+          <th>
+            名前
+          </th>
+        </tr>
+        {{range .event}}
+        <tr>
+          <th>
+            {{.Day}}
+          </th>
+          <th>
+            {{.Terrain}}
+          </th>
+          <th>
+            <a href={{.Url}}> {{.Name}}</a>
+          </th>
+        </tr>
+        {{end}}
+      </table>
+    </ul>
+
+    <h3>ページリスト</h3>
+    <ul>
+      <li><a href="/title1/">タイトル1</a>
+      <li><a href="/title2/">タイトル2</a>
+      <li><a href="/title3/">タイトル3</a>
+      <li><a href="/title4/">タイトル4</a>
+      <li><a href="/title5/">タイトル5</a>
+      <li><a href="/title6/">タイトル6</a>
+      <li><a href="/title7/">タイトル7</a>
+      <li><a href="/title8/">タイトル8</a>
+      <li><a href="/title9/">タイトル9</a>
+      <li><a href="/title10/">タイトル10</a>
+    </ul>
+    
+    <h3>切り替え</h3>
+    <ul class="pagination">
+      <li><a href="/" aria-label="First"><span aria-hidden="true">&laquo;&laquo;</span></a></li>
+      <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+      <li class="active"><a href="/">1</a></li>
+      <li><a href="/page/2/">2</a></li>
+      <li><a href="/page/3/">3</a></li>
+      <li class="disabled"><span aria-hidden="true">&hellip;</span></li>
+      <li><a href="/page/8/">8</a></li>
+      <li><a href="/page/2/" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+      <li><a href="/page/8/" aria-label="Last"><span aria-hidden="true">&raquo;&raquo;</span></a></li>
+    </ul>
+</html>
