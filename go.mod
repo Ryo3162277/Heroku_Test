@@ -1,4 +1,4 @@
-module github.com/Ryo3162277/Heroku_Test/orienteering
+module github.com/Ryo3162277/Heroku_Test
 
 go 1.16
 
