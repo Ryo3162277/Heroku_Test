@@ -124,7 +124,8 @@ func AnalysisSubmitHandler(c *gin.Context) {
 	er := db.Order("event_id desc").First(&top).Error
 	var I int
 	if er != nil {
-		I = 0
+		I = eventnum - 100
+		//I = 0
 	} else {
 		I = top.EventID + 1
 	}
