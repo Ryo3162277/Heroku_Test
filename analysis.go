@@ -244,6 +244,8 @@ func readEvent(i int) {
 			})
 		})
 	})
+
+	db1.Close()
 }
 
 func readRecord(eventid int, classnum int) {
@@ -372,7 +374,7 @@ func readRecord(eventid int, classnum int) {
 		//fmt.Println(html)
 
 	})
-
+	db.Close()
 }
 
 func EventHandler(c *gin.Context) {
@@ -390,6 +392,7 @@ func EventHandler(c *gin.Context) {
 	racearray := []Race{}
 	db.Where("event_id = ?", id).Find(&racearray)
 	c.HTML(http.StatusOK, "event.html", gin.H{"race": racearray})
+	db.Close()
 }
 func ClassHandler(c *gin.Context) {
 	r := c.Request
@@ -406,6 +409,7 @@ func ClassHandler(c *gin.Context) {
 	recordarray := []Record{}
 	db.Where("event_id = ? AND class_num = ?", eventid, classid).Find(&recordarray)
 	c.HTML(http.StatusOK, "class.html", gin.H{"records": recordarray})
+	db.Close()
 }
 func RecordHandler(c *gin.Context) {
 	r := c.Request
@@ -451,7 +455,9 @@ func RecordHandler(c *gin.Context) {
 	dbR.Where("event_id = ? AND class_num = ?", rec.EventID, rec.ClassNum).First(&race)
 
 	c.HTML(http.StatusOK, "record.html", gin.H{"record": rec, "lT": lTs, "lR": lRs, "eT": eTs, "eR": eRs, "lLT": lLTs, "race": race, "event": event})
-
+	db.Close()
+	dbe.Close()
+	dbR.Close()
 }
 
 type Analysis struct {
@@ -581,11 +587,14 @@ func AnalysisPostHandler(c *gin.Context) {
 		}
 
 		c.Redirect(http.StatusSeeOther, "/top")
-
+		db_ana.Close()
 	} else {
 
 		c.Redirect(http.StatusSeeOther, "/")
 	}
+	db.Close()
+	dbEvent.Close()
+	dbRace.Close()
 }
 
 func MyAnalysisHandler(c *gin.Context) {
@@ -614,6 +623,7 @@ func MyAnalysisHandler(c *gin.Context) {
 
 		c.Redirect(http.StatusSeeOther, "/")
 	}
+	db.Close()
 }
 
 func EveryAnalysisHandler(c *gin.Context) {
@@ -628,7 +638,7 @@ func EveryAnalysisHandler(c *gin.Context) {
 	var AnalysisArray []Analysis
 	db.Find(&AnalysisArray)
 	c.HTML(http.StatusOK, "analysislist.html", gin.H{"analysisarray": AnalysisArray})
-
+	db.Close()
 }
 
 func SubmittedAnalysisHandler(c *gin.Context) {
@@ -704,6 +714,10 @@ func SubmittedAnalysisHandler(c *gin.Context) {
 			} else {
 				c.HTML(http.StatusOK, "viewanalysis.html", gin.H{"analysis": analysis, "record": rec, "lT": lTs, "lR": lRs, "eT": eTs, "eR": eRs, "lLT": lLTs, "race": race, "event": event})
 			}
+
+			db1.Close()
+			dbR.Close()
+			dbe.Close()
 			//c.HTML(http.StatusOK, "myanalysis.html", gin.H{"analysisarray":AnalysisArray})
 		}
 
@@ -713,6 +727,7 @@ func SubmittedAnalysisHandler(c *gin.Context) {
 
 		c.Redirect(http.StatusSeeOther, "/")
 	}
+	db.Close()
 }
 
 func AnalysisChangeHandler(c *gin.Context) {
