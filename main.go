@@ -37,7 +37,7 @@ func main() {
 	github_password := os.Getenv("GITHUB_PASSWORD")
 	google_cli := os.Getenv("GOOGLE_CLI")
 	google_password := os.Getenv("GOOGLE_PASSWORD")
-
+	EventDBInit()
 	//readEvent(6535)
 	router := gin.Default()
 	router.SetFuncMap(funcMap)
@@ -87,7 +87,7 @@ func main() {
 	}
 	port = ":" + port
 	router.Run(port)
-	EventDBInit()
+
 }
 
 func EventDBInit() {
