@@ -45,8 +45,8 @@ func main() {
 	gomniauth.WithProviders(
 		//facebook.New("クライアントid", "秘密の値", "http://localhost:8080/auth/callback/facebook"),
 
-		github.New(github_cli, github_password, "http://fierce-citadel-16696.herokuapp.com/auth/callback/github"),
-		google.New(google_cli, google_password, "http://fierce-citadel-16696.herokuapp.com/auth/callback/google"),
+		github.New(github_cli, github_password, "/auth/callback/github"),
+		google.New(google_cli, google_password, "/auth/callback/google"),
 	)
 	router.LoadHTMLGlob("templates/*.html")
 	router.GET("/", func(c *gin.Context) {
