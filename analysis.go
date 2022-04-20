@@ -124,7 +124,7 @@ func AnalysisSubmitHandler(c *gin.Context) {
 	er := db.Order("event_id desc").First(&top).Error
 	var I int
 	if er != nil {
-		I = eventnum - 100
+		I = eventnum - 10
 		//I = 0
 	} else {
 		I = top.EventID + 1
@@ -200,16 +200,51 @@ func readEvent(i int) {
 	if err != nil {
 		panic("failed to connect database\n")
 	}
-	databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
-	db1, err1 := gorm.Open("postgres", databaseUrl1)
-	//db1, err1 := gorm.Open("postgres", "Race.db")
-	if err1 != nil {
-		panic("failed to connect database\n")
-	}
 	db.Create(&Event{EventID: i, Url: analysisURL, Name: eventname, Terrain: terrain, Day: eventday})
 	//fmt.Println(event)
 	db.Close()
+
+	readRace(i)
+}
+
+/*
+ *  read race
+ */
+func readRace(eventid int) []Race {
+	analysisURL := "/analysis/" + strconv.Itoa(eventid)
+	eventURL := "https://mulka2.com/lapcenter/lapcombat2/index.jsp?event=" + strconv.Itoa(eventid) + "&file=1"
+	res, err := http.Get(eventURL)
+	var RaceSlice []Race
+	if err != nil {
+		return RaceSlice
+	}
+	defer res.Body.Close()
+
+	// 読み取り
+	buf, _ := ioutil.ReadAll(res.Body)
+
+	// 文字コード判定
+	det := chardet.NewTextDetector()
+	detRslt, _ := det.DetectBest(buf)
+	//fmt.Println(detRslt.Charset)
+	// => EUC-JP
+
+	// 文字コード変換
+	bReader := bytes.NewReader(buf)
+	reader, _ := charset.NewReaderLabel(detRslt.Charset, bReader)
+
+	// HTMLパース
+	doc, _ := goquery.NewDocumentFromReader(reader)
+	/*
+		databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
+		db1, err1 := gorm.Open("postgres", databaseUrl1)
+		//db1, err1 := gorm.Open("postgres", "Race.db")
+		if err1 != nil {
+			panic("failed to connect database\n")
+		}
+	*/
 	Num := 0
+
 	doc.Find("div.row").Each(func(_ int, s *goquery.Selection) {
 		s.Find("div").Each(func(_ int, s1 *goquery.Selection) {
 
@@ -234,36 +269,40 @@ func readEvent(i int) {
 					//fmt.Print(s4.Find("b").First().Text())
 					if up != "up" && dis != "dis" {
 						classurl := analysisURL + "/" + strconv.Itoa(Num)
-						db1.Create(&Race{URL: classurl, Class: race, Distance: dis, Up: up, EventID: i, ClassNum: Num})
-
-						readRecord(i, Num)
+						/*
+							db1.Create(&Race{URL: classurl, Class: race, Distance: dis, Up: up, EventID: eventid, ClassNum: Num})
+						*/
+						RaceSlice = append(RaceSlice, Race{URL: classurl, Class: race, Distance: dis, Up: up, EventID: eventid, ClassNum: Num})
+						readRecord(eventid, Num)
 						Num += 1
 					}
-
 				})
-
 			})
 		})
 	})
-
-	db1.Close()
+	/*
+		db1.Close()
+	*/
+	return RaceSlice
 }
 
-func readRecord(eventid int, classnum int) {
+func readRecord(eventid int, classnum int) []Record {
 	URL := "https://mulka2.com/lapcenter/lapcombat2/split-list.jsp?event=" + strconv.Itoa(eventid) + "&file=1&class=" + strconv.Itoa(classnum) + "&content=analysis"
 	res, err := http.Get(URL)
+	var RecordSlice []Record
 	if err != nil {
-		return
+		return RecordSlice
 	}
 	defer res.Body.Close()
+	/*
+		databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
+		db, err2 := gorm.Open("postgres", databaseUrl2)
 
-	databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
-	db, err2 := gorm.Open("postgres", databaseUrl2)
-
-	//db, err2 := gorm.Open("postgres", "Record.db")
-	if err2 != nil {
-		panic("I cannot open database")
-	}
+		//db, err2 := gorm.Open("postgres", "Record.db")
+		if err2 != nil {
+			panic("I cannot open database")
+		}
+	*/
 	// 読み取り
 	buf, _ := ioutil.ReadAll(res.Body)
 
@@ -365,8 +404,11 @@ func readRecord(eventid int, classnum int) {
 				}
 				if BOOLTMP {
 					url = URL + "/" + strconv.Itoa(index)
-					db.Create(&Record{Index: index, RunnerName: runnerName, ClubName: clubName, Rank: rank, Result: result, Speed: speed, LossRate: lossRate, IdealTime: idealTime, LapTime: lapTime, LapRank: lapRank, ElapsedTime: elapsedTime, ElapsedRank: elapsedRank, LegLossTime: legLossTime, EventID: eventID, ClassNum: classNum, URL: url})
+					/*
+						db.Create(&Record{Index: index, RunnerName: runnerName, ClubName: clubName, Rank: rank, Result: result, Speed: speed, LossRate: lossRate, IdealTime: idealTime, LapTime: lapTime, LapRank: lapRank, ElapsedTime: elapsedTime, ElapsedRank: elapsedRank, LegLossTime: legLossTime, EventID: eventID, ClassNum: classNum, URL: url})
+					*/
 					BOOLTMP = false
+					RecordSlice = append(RecordSlice, Record{Index: index, RunnerName: runnerName, ClubName: clubName, Rank: rank, Result: result, Speed: speed, LossRate: lossRate, IdealTime: idealTime, LapTime: lapTime, LapRank: lapRank, ElapsedTime: elapsedTime, ElapsedRank: elapsedRank, LegLossTime: legLossTime, EventID: eventID, ClassNum: classNum, URL: url})
 
 				}
 				//fmt.Println(line)
@@ -375,7 +417,10 @@ func readRecord(eventid int, classnum int) {
 		//fmt.Println(html)
 
 	})
-	db.Close()
+	/*
+		db.Close()
+	*/
+	return RecordSlice
 }
 
 func EventHandler(c *gin.Context) {
@@ -383,82 +428,128 @@ func EventHandler(c *gin.Context) {
 	//w := c.Writer
 	segs := strings.Split(r.URL.Path, "/")
 	id := segs[2]
-	databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
-	db, err := gorm.Open("postgres", databaseUrl1)
+	/*
+		databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
+		db, err := gorm.Open("postgres", databaseUrl1)
 
-	//db, err := gorm.Open("postgres", "Race.db")
-	if err != nil {
-		panic("failed to connect database\n")
+		//db, err := gorm.Open("postgres", "Race.db")
+		if err != nil {
+			panic("failed to connect database\n")
+		}
+		racearray := []Race{}
+		db.Where("event_id = ?", id).Find(&racearray)
+	*/
+	ID, error := strconv.Atoi(id)
+	if error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"code": "Page_Not_Found", "message": "Page not found"})
+	} else {
+		racearray := readRace(ID)
+		c.HTML(http.StatusOK, "event.html", gin.H{"race": racearray})
+
 	}
-	racearray := []Race{}
-	db.Where("event_id = ?", id).Find(&racearray)
-	c.HTML(http.StatusOK, "event.html", gin.H{"race": racearray})
-	db.Close()
+	/*
+		db.Close()
+	*/
 }
 func ClassHandler(c *gin.Context) {
 	r := c.Request
 	segs := strings.Split(r.URL.Path, "/")
 	eventid := segs[2]
 	classid := segs[3]
-	databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
-	db, err := gorm.Open("postgres", databaseUrl2)
+	/*
+		databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
+		db, err := gorm.Open("postgres", databaseUrl2)
 
-	//db, err := gorm.Open("postgres", "Record.db")
-	if err != nil {
-		panic("failed to connect database")
+		//db, err := gorm.Open("postgres", "Record.db")
+		if err != nil {
+			panic("failed to connect database")
+		}
+		recordarray := []Record{}
+		db.Where("event_id = ? AND class_num = ?", eventid, classid).Find(&recordarray)
+	*/
+	EventID, error1 := strconv.Atoi(eventid)
+	ClassID, error2 := strconv.Atoi(classid)
+	if error1 != nil || error2 != nil {
+		c.JSON(http.StatusNotFound, gin.H{"code": "Page_Not_Found", "message": "Page not found"})
+	} else {
+		recordarray := readRecord(EventID, ClassID)
+		c.HTML(http.StatusOK, "class.html", gin.H{"records": recordarray})
+
 	}
-	recordarray := []Record{}
-	db.Where("event_id = ? AND class_num = ?", eventid, classid).Find(&recordarray)
-	c.HTML(http.StatusOK, "class.html", gin.H{"records": recordarray})
-	db.Close()
+	/*
+		db.Close()
+	*/
 }
 func RecordHandler(c *gin.Context) {
 	r := c.Request
-	url := r.URL.Path
-	databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
-	db, err := gorm.Open("postgres", databaseUrl2)
+	//url := r.URL.Path
+	segs := strings.Split(r.URL.Path, "/")
+	eventid := segs[2]
+	classid := segs[3]
+	indexid := segs[4]
+	/*
+		databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
+		db, err := gorm.Open("postgres", databaseUrl2)
 
-	//db, err := gorm.Open("postgres", "Record.db")
-	if err != nil {
-		panic("failed to connect database")
+		//db, err := gorm.Open("postgres", "Record.db")
+		if err != nil {
+			panic("failed to connect database")
+		}
+
+		var rec Record
+		db.Where("url = ?", url).First(&rec)
+	*/
+	EventID, error1 := strconv.Atoi(eventid)
+	ClassID, error2 := strconv.Atoi(classid)
+	IndexID, error3 := strconv.Atoi(indexid)
+	if error1 != nil || error2 != nil || error3 != nil {
+
+	} else {
+		recordarray := readRecord(EventID, ClassID)
+		rec := recordarray[IndexID]
+		lT := strings.Replace(rec.LapTime, ";", "", -1)
+		lTs := strings.Split(lT, ",")
+		lR := strings.Replace(rec.LapRank, ";", "", -1)
+		lRs := strings.Split(lR, ",")
+
+		eT := strings.Replace(rec.ElapsedTime, ";", "", -1)
+		eTs := strings.Split(eT, ",")
+		eR := strings.Replace(rec.ElapsedRank, ";", "", -1)
+		eRs := strings.Split(eR, ",")
+
+		lLT := strings.Replace(rec.LegLossTime, ";", "", -1)
+		lLTs := strings.Split(lLT, ",")
+		var event Event
+		databaseUrl := os.Getenv("DATABASE_URL")
+		dbe, err1 := gorm.Open("postgres", databaseUrl)
+
+		//dbe, err1 := gorm.Open("postgres", "event.db")
+		if err1 != nil {
+			panic("failed to connect database")
+		}
+		dbe.Where("event_id = ?", rec.EventID).First(&event)
+		/*
+			var race Race
+			databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
+			dbR, err2 := gorm.Open("postgres", databaseUrl1)
+
+			//dbR, err2 := gorm.Open("postgres", "Race.db")
+			if err2 != nil {
+				panic("failed to connect database")
+			}
+			dbR.Where("event_id = ? AND class_num = ?", rec.EventID, rec.ClassNum).First(&race)
+		*/
+		racearray := readRace(EventID)
+		race := racearray[ClassID]
+		c.HTML(http.StatusOK, "record.html", gin.H{"record": rec, "lT": lTs, "lR": lRs, "eT": eTs, "eR": eRs, "lLT": lLTs, "race": race, "event": event})
+		dbe.Close()
 	}
-	var rec Record
-	db.Where("url = ?", url).First(&rec)
-	lT := strings.Replace(rec.LapTime, ";", "", -1)
-	lTs := strings.Split(lT, ",")
-	lR := strings.Replace(rec.LapRank, ";", "", -1)
-	lRs := strings.Split(lR, ",")
 
-	eT := strings.Replace(rec.ElapsedTime, ";", "", -1)
-	eTs := strings.Split(eT, ",")
-	eR := strings.Replace(rec.ElapsedRank, ";", "", -1)
-	eRs := strings.Split(eR, ",")
+	/*
+		db.Close()
 
-	lLT := strings.Replace(rec.LegLossTime, ";", "", -1)
-	lLTs := strings.Split(lLT, ",")
-	var event Event
-	databaseUrl := os.Getenv("DATABASE_URL")
-	dbe, err1 := gorm.Open("postgres", databaseUrl)
-
-	//dbe, err1 := gorm.Open("postgres", "event.db")
-	if err1 != nil {
-		panic("failed to connect database")
-	}
-	dbe.Where("event_id = ?", rec.EventID).First(&event)
-	var race Race
-	databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
-	dbR, err2 := gorm.Open("postgres", databaseUrl1)
-
-	//dbR, err2 := gorm.Open("postgres", "Race.db")
-	if err2 != nil {
-		panic("failed to connect database")
-	}
-	dbR.Where("event_id = ? AND class_num = ?", rec.EventID, rec.ClassNum).First(&race)
-
-	c.HTML(http.StatusOK, "record.html", gin.H{"record": rec, "lT": lTs, "lR": lRs, "eT": eTs, "eR": eRs, "lLT": lLTs, "race": race, "event": event})
-	db.Close()
-	dbe.Close()
-	dbR.Close()
+		dbR.Close()
+	*/
 }
 
 type Analysis struct {
@@ -508,20 +599,25 @@ func AnalysisPostHandler(c *gin.Context) {
 	//w :=c.Writer
 	segs := strings.Split(r.URL.Path, "/")
 	//fmt.Println(c.PostForm("plan1"))
-	databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
-	db, err := gorm.Open("postgres", databaseUrl2)
+	/*
+		databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
+		db, err := gorm.Open("postgres", databaseUrl2)
 
-	//db, err := gorm.Open("postgres", "Record.db")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	var rec Record
+		//db, err := gorm.Open("postgres", "Record.db")
+		if err != nil {
+			panic("failed to connect database")
+		}
+		var rec Record
+	*/
 	//fmt.Println(segs[4])
 	EID, _ := strconv.Atoi(segs[2])
 	CNM, _ := strconv.Atoi(segs[3])
 	IND, _ := strconv.Atoi(segs[4])
-	temp_url := "/analysis/" + segs[2] + "/" + segs[3] + "/" + segs[4]
-	db.Where("url = ?", temp_url).First(&rec)
+	rec := readRecord(EID, CNM)[IND]
+	//temp_url := "/analysis/" + segs[2] + "/" + segs[3] + "/" + segs[4]
+	/*
+		db.Where("url = ?", temp_url).First(&rec)
+	*/
 	//db.Where("event_id = ?", EID).Where("class_num = ?",CNM).Where(" 'index' = ?",IND).First(&rec)
 	lT := strings.Replace(rec.LapTime, ";", "", -1)
 	//fmt.Println(rec.RunnerName)
@@ -531,14 +627,17 @@ func AnalysisPostHandler(c *gin.Context) {
 	runner := rec.RunnerName
 	//fmt.Println(runner)
 	//fmt.Println("runner")
-	databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
-	dbRace, err := gorm.Open("postgres", databaseUrl1)
-	//dbRace, err := gorm.Open("postgres", "Race.db")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	var race Race
-	dbRace.Where("event_id = ?", EID).Where("class_num = ?", CNM).First(&race)
+	/*
+		databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
+		dbRace, err := gorm.Open("postgres", databaseUrl1)
+		//dbRace, err := gorm.Open("postgres", "Race.db")
+		if err != nil {
+			panic("failed to connect database")
+		}
+		var race Race
+		dbRace.Where("event_id = ?", EID).Where("class_num = ?", CNM).First(&race)
+	*/
+	race := readRace(EID)[CNM]
 	class_name := race.Class
 	databaseUrl := os.Getenv("DATABASE_URL")
 	dbEvent, err := gorm.Open("postgres", databaseUrl)
@@ -593,9 +692,11 @@ func AnalysisPostHandler(c *gin.Context) {
 
 		c.Redirect(http.StatusSeeOther, "/")
 	}
-	db.Close()
 	dbEvent.Close()
-	dbRace.Close()
+	/*
+		db.Close()
+		dbRace.Close()
+	*/
 }
 
 func MyAnalysisHandler(c *gin.Context) {
@@ -663,21 +764,26 @@ func SubmittedAnalysisHandler(c *gin.Context) {
 			db.First(&analysis, analysis.ID).Related(&analysis.Plans, "Plans").Related(&analysis.Executions, "Executions")
 			//var tmp_ana Analysis
 			//db.First(&tmp_ana,analysis.ID)
-			databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
-			db1, err1 := gorm.Open("postgres", databaseUrl2)
+			/*
+				databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
+				db1, err1 := gorm.Open("postgres", databaseUrl2)
 
-			//db1, err1 := gorm.Open("postgres", "Record.db")
-			if err1 != nil {
-				panic("failed to connect database")
-			}
-			var rec Record
+				//db1, err1 := gorm.Open("postgres", "Record.db")
+				if err1 != nil {
+					panic("failed to connect database")
+				}
+				var rec Record
+			*/
+
 			//fmt.Println(segs[4])
 			EID := analysis.EventID
 			CNM := analysis.ClassNum
 			IND := analysis.RunnerIndex
-			temp_url := "/analysis/" + strconv.Itoa(EID) + "/" + strconv.Itoa(CNM) + "/" + strconv.Itoa(IND)
-			db1.Where("url = ?", temp_url).First(&rec)
-
+			/*
+				temp_url := "/analysis/" + strconv.Itoa(EID) + "/" + strconv.Itoa(CNM) + "/" + strconv.Itoa(IND)
+				db1.Where("url = ?", temp_url).First(&rec)
+			*/
+			rec := readRecord(EID, CNM)[IND]
 			lT := strings.Replace(rec.LapTime, ";", "", -1)
 			lTs := strings.Split(lT, ",")
 			lR := strings.Replace(rec.LapRank, ";", "", -1)
@@ -700,24 +806,26 @@ func SubmittedAnalysisHandler(c *gin.Context) {
 				panic("failed to connect database")
 			}
 			dbe.Where("event_id = ?", rec.EventID).First(&event)
-			var race Race
-
-			databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
-			dbR, err2 := gorm.Open("postgres", databaseUrl1)
-			//dbR, err2 := gorm.Open("postgres", "Race.db")
-			if err2 != nil {
-				panic("failed to connect database")
-			}
-			dbR.Where("event_id = ? AND class_num = ?", rec.EventID, rec.ClassNum).First(&race)
-
+			/*
+				var race Race
+				databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
+				dbR, err2 := gorm.Open("postgres", databaseUrl1)
+				//dbR, err2 := gorm.Open("postgres", "Race.db")
+				if err2 != nil {
+					panic("failed to connect database")
+				}
+				dbR.Where("event_id = ? AND class_num = ?", rec.EventID, rec.ClassNum).First(&race)
+			*/
+			race := readRace(EID)[CNM]
 			if analysis.UserID == User_ID {
 				c.HTML(http.StatusOK, "myanalysis.html", gin.H{"analysis": analysis, "record": rec, "lT": lTs, "lR": lRs, "eT": eTs, "eR": eRs, "lLT": lLTs, "race": race, "event": event})
 			} else {
 				c.HTML(http.StatusOK, "viewanalysis.html", gin.H{"analysis": analysis, "record": rec, "lT": lTs, "lR": lRs, "eT": eTs, "eR": eRs, "lLT": lLTs, "race": race, "event": event})
 			}
-
-			db1.Close()
-			dbR.Close()
+			/*
+				db1.Close()
+				dbR.Close()
+			*/
 			dbe.Close()
 			//c.HTML(http.StatusOK, "myanalysis.html", gin.H{"analysisarray":AnalysisArray})
 		}
@@ -737,19 +845,22 @@ func AnalysisChangeHandler(c *gin.Context) {
 	//w :=c.Writer
 	segs := strings.Split(r.URL.Path, "/")
 
-	databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
-	db, err := gorm.Open("postgres", databaseUrl2)
-	//db, err := gorm.Open("postgres", "Record.db")
+	/*
+		databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
+		db, err := gorm.Open("postgres", databaseUrl2)
+		//db, err := gorm.Open("postgres", "Record.db")
 
-	if err != nil {
-		panic("failed to connect database")
-	}
-	var rec Record
+		if err != nil {
+			panic("failed to connect database")
+		}
+		var rec Record
 
+		db.Where("url = ?", temp_url).First(&rec)
+
+		db.Close()
+	*/
 	temp_url := "/submitted_analysis/" + segs[2] + "/" + segs[3] + "/" + segs[4]
-	db.Where("url = ?", temp_url).First(&rec)
 
-	db.Close()
 	plan := c.PostForm("plan")
 	execution := c.PostForm("execution")
 
