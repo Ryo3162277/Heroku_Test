@@ -204,7 +204,7 @@ func readEvent(i int) {
 	//fmt.Println(event)
 	db.Close()
 
-	readRace(i)
+	//readRace(i)
 }
 
 /*
@@ -273,7 +273,7 @@ func readRace(eventid int) []Race {
 							db1.Create(&Race{URL: classurl, Class: race, Distance: dis, Up: up, EventID: eventid, ClassNum: Num})
 						*/
 						RaceSlice = append(RaceSlice, Race{URL: classurl, Class: race, Distance: dis, Up: up, EventID: eventid, ClassNum: Num})
-						readRecord(eventid, Num)
+						//readRecord(eventid, Num)
 						Num += 1
 					}
 				})
