@@ -102,26 +102,30 @@ func EventDBInit() {
 	/*
 	 *
 	 */
-	databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
-	dbr, err1 := gorm.Open("postgres", databaseUrl1)
-	//dbr, err1 := gorm.Open("postgres", "Race.db")
-	if err1 != nil {
-		panic("I cannot open database")
-	}
-	dbr.AutoMigrate(&Race{})
+	/*
+		databaseUrl1 := os.Getenv("HEROKU_POSTGRESQL_AQUA_URL")
+		dbr, err1 := gorm.Open("postgres", databaseUrl1)
+		//dbr, err1 := gorm.Open("postgres", "Race.db")
+		if err1 != nil {
+			panic("I cannot open database")
+		}
+		dbr.AutoMigrate(&Race{})
+	*/
 	/*
 	 *
 	 */
-	databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
-	dbRec, err2 := gorm.Open("postgres", databaseUrl2)
-	//dbRec, err2 := gorm.Open("postgres", "Record.db")
-	if err2 != nil {
-		panic("I cannot open database")
-	}
-	dbr.AutoMigrate(&Race{})
-	dbr.Close()
-	dbRec.AutoMigrate(&Record{})
-	dbRec.Close()
+	/*
+		databaseUrl2 := os.Getenv("HEROKU_POSTGRESQL_CYAN_URL")
+		dbRec, err2 := gorm.Open("postgres", databaseUrl2)
+		//dbRec, err2 := gorm.Open("postgres", "Record.db")
+		if err2 != nil {
+			panic("I cannot open database")
+		}
+		dbr.AutoMigrate(&Race{})
+		dbr.Close()
+		dbRec.AutoMigrate(&Record{})
+		dbRec.Close()
+	*/
 	/*
 	 *
 	 */
