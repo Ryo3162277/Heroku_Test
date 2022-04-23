@@ -137,6 +137,10 @@ func AnalysisSubmitHandler(c *gin.Context) {
 	db.Close()
 	c.HTML(http.StatusOK, "analysis.html", gin.H{"event": events})
 }
+
+/*
+ * read event
+ */
 func readEvent(i int) {
 	eventURL := "https://mulka2.com/lapcenter/lapcombat2/index.jsp?event=" + strconv.Itoa(i) + "&file=1"
 	res, err := http.Get(eventURL)

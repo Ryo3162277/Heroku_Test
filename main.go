@@ -26,6 +26,9 @@ import (
 	"github.com/stretchr/gomniauth/providers/google"
 )
 
+/*
+ * main
+ */
 func main() {
 	funcMap := template.FuncMap{
 		"add": func(a, b int) int { return a + b },
