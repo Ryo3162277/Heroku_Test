@@ -44,7 +44,8 @@ func main() {
 	//readEvent(6535)
 	router := gin.Default()
 	router.SetFuncMap(funcMap)
-	gomniauth.SetSecurityKey("セキュリティキー")
+	security_key := os.Getenv("SECURITY_KEY")
+	gomniauth.SetSecurityKey(security_key)
 	gomniauth.WithProviders(
 		//facebook.New("クライアントid", "秘密の値", "http://localhost:8080/auth/callback/facebook"),
 
